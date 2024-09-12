@@ -1,5 +1,6 @@
 FROM python:3.12-alpine
 WORKDIR /code
-RUN pip install --no-cache-dir --upgrade uvicorn fastapi fastapi[standard]
-COPY main.py main.py
+COPY app/requirements.txt requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+COPY app/main.py main.py
 CMD ["fastapi", "run", "main.py", "--port", "80"]

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nettest
+  labels:
+    app: nettest
+spec:
+  containers:
+    - image: ctrahey/nettest:www-python-fastapi
+      name: nettest
+      ports:
+        - containerPort: 80
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nettest
+spec:
+  selector:
+    app: nettest
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: nettest
+  namespace: default
+spec:
+  gateways:
+  - istio-system/istio-ingressgateway
+  hosts:
+  - api-slim.u10d.dev
+  http:
+  - match:
+    - uri:
+        prefix: /nettest/
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: nettest
+        port:
+          number: 80
