@@ -150,7 +150,7 @@ az vm create --resource-group $RESOURCE_GROUP \
   --name myVM1 \
   --nics myNicVM1 \
   --image Canonical:0001-com-ubuntu-server-jammy:22_04-lts-gen2:latest \
-  --admin-username unsructured \
+  --admin-username unstructured \
   --user-data ./start-service-init.sh \
   --size Standard_D8s_v5 \
   --ssh-key-values ~/.ssh/id_ed25519.pub
