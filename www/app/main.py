@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import time
 from typing import Annotated, Optional
 
-from fastapi import FastAPI, status, File, Path, Response, Request, HTTPException
+from fastapi import FastAPI, status, UploadFile, Path, Response, Request, HTTPException
 import uvicorn
 from uvicorn.config import LOG_LEVELS
 import asyncio
@@ -61,7 +61,7 @@ DELAY_PATTERN = r"^([0-9]{1,4})(us|ms|s|m)$"
 async def root(slug: Annotated[str, Path(pattern=r"^[a-zA-Z0-9_-]{1,24}$")],
                response_length: Annotated[str, Path(pattern=LENGTH_PATTERN)],
                delay: Annotated[str, Path(pattern=DELAY_PATTERN)],
-               file: Annotated[bytes, File()],
+               files: UploadFile,
                request: Request,
                seed: Optional[int] = None,
                jitter: int = 0,
@@ -104,7 +104,7 @@ async def root(slug: Annotated[str, Path(pattern=r"^[a-zA-Z0-9_-]{1,24}$")],
         "tail": response_utf_8[-12:],
         "sha256": sum.decode('utf-8'),
         "seed": _seed,
-        "input_size": len(file)
+        "input_size": files.size
     }
     logger.info(json.dumps(details))
     return Response(content=response_data,
@@ -120,7 +120,7 @@ async def root(slug: Annotated[str, Path(pattern=r"^[a-zA-Z0-9_-]{1,24}$")],
                         'Client-Info': f"{request.client.host}:{request.client.port}",
                         'Content-Begins': response_utf_8[0:12],
                         'Content-Ends': response_utf_8[-12:],
-                        'Input-Length': str(len(file)),
+                        'Input-Length': str(files.size),
                     })
 
 @app.get("/favicon.ico")
