@@ -53,7 +53,8 @@ az network nsg rule create \
   --resource-group $RESOURCE_GROUP \
   --nsg-name TraheyNettestNSG \
   --name myNSGRuleHTTP \
-  --protocol '*' \RESOURCE_GROUP=TraheyNetTest
+  --protocol '*' \
+  --priority 204
 LB_NAME=TraheyNetTestLB
 az group create --name TraheyNetTest --location westus
 
@@ -116,38 +117,16 @@ az network nsg rule create \
   --access allow \
   --priority 200
 
-
-az network public-ip create \
-  --resource-group $RESOURCE_GROUP \
-  --name TraheyNettestBastionIP \
-  --sku Standard
-
-az network vnet subnet create \
-  --resource-group $RESOURCE_GROUP \
-  --name TraheyBastionSubnet \
-  --vnet-name NetTest \
-  --address-prefixes 10.1.1.0/27
-
-
-  --direction inbound \
-  --source-address-prefix '*' \
-  --source-port-range '*' \
-  --destination-address-prefix '*' \
-  --destination-port-range 80 \
-  --access allow \
-  --priority 200
-
-
-az network public-ip create \
-  --resource-group $RESOURCE_GROUP \
-  --name TraheyNettestBastionIP \
-  --sku Standard
-
 az network vnet subnet create \
   --resource-group $RESOURCE_GROUP \
   --name AzureBastionSubnet \
   --vnet-name NetTest \
   --address-prefixes 10.1.1.0/27
+
+az network public-ip create \
+  --resource-group $RESOURCE_GROUP \
+  --name TraheyNettestBastionIP \
+  --sku Standard
 
 az network bastion create \
   --resource-group $RESOURCE_GROUP \
@@ -176,7 +155,7 @@ az vm create --resource-group $RESOURCE_GROUP \
   --size Standard_D8s_v5 \
   --ssh-key-values ~/.ssh/id_ed25519.pub
 
-array=(myNicVM1)
+array=("myNicVM1")
 for vmnic in "${array[@]}"
 do
   az network nic ip-config address-pool add \
