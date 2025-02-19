@@ -1,3 +1,5 @@
 uvicorn
 fastapi[standard]
 python-multipart
+pydantic
+scipy[stats]

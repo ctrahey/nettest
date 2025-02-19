@@ -1,0 +1,12 @@
+redact_headers:
+  - unstructured-api-key
+mock_server_configs:
+  - methods:
+      - GET
+      - POST
+    mount_paths:
+      - "/general/v0/general"
+    source_files_directory: "example-outputs"
+    latency_median: 2
+    latency_std_deviation: 0.5
+    error_probability: 0.01
