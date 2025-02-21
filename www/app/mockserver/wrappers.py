@@ -2,14 +2,14 @@ import asyncio
 import functools
 import os
 from typing import Callable
-from scipy.stats import norm
+from statistics import NormalDist
 import random
 from fastapi import HTTPException
 
 
 def call_after_delay(median: float, std_dev: float):
-    d = norm(loc=median, scale=std_dev)
-    samples = d.rvs(size=1000)
+    d = NormalDist(mu=median, sigma=std_dev)
+    samples = d.samples(n=1000)
 
     def decorator(f: Callable):
         @functools.wraps(f)

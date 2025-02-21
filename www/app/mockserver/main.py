@@ -27,8 +27,8 @@ from enum import Enum
 import random
 from hashlib import sha256
 import yaml
-from config import NettestConfig
-from wrappers import call_after_delay, fail_sometimes, random_file_provider
+from mockserver.config import NettestConfig
+from mockserver.wrappers import call_after_delay, fail_sometimes, random_file_provider
 
 logging.basicConfig(
     level=LOG_LEVELS[os.environ.get("LOG_LEVEL", "info")],
@@ -114,13 +114,17 @@ empty_hash = f"sha256:{sha256(b"").hexdigest()}"
 LENGTH_PATTERN = r"^([0-9]{1,4})(b|kb|mb)$"
 DELAY_PATTERN = r"^([0-9]{1,4})(us|ms|s|m)$"
 
+@app.get("/ready")
+async def ready():
+    return {"ready": True}
+
 
 @app.post("/{slug}/{response_length}/{delay}")
 async def root(
     slug: Annotated[str, Path(pattern=r"^[a-zA-Z0-9_-]{1,24}$")],
     response_length: Annotated[str, Path(pattern=LENGTH_PATTERN)],
     delay: Annotated[str, Path(pattern=DELAY_PATTERN)],
-    files: UploadFile,
+    files: Optional[UploadFile],
     request: Request,
     seed: Optional[int] = None,
     jitter: int = 0,
@@ -136,7 +140,7 @@ async def root(
     if jitter > seconds:
         raise HTTPException(
             status_code=400,
-            detail="Jitter too high. Jitter must be less than or equal to requested delay.",
+            detail="Jitter too high; must be less than or equal to requested delay.",
         )
     jitter_seconds = random.uniform(-jitter, jitter)
     seconds = seconds + jitter_seconds
@@ -159,9 +163,12 @@ async def root(
     mark_end = time.time()
     duration = mark_end - mark_start
     req_headers = request.headers.mutablecopy()
-    keysum = sha256(req_headers["unstructured-api-key"].encode("utf-8")).hexdigest()
-    redacted = f"sha-256-32:{keysum[0:8]}"
-    req_headers["unstructured-api-key"] = redacted
+    for redaction_header in config.redact_headers:
+        raw_value = request.headers.get(redaction_header, None)
+        if raw_value is not None:
+            keysum = sha256(raw_value.encode("utf-8")).hexdigest()
+            redacted = f"sha-256-32:{keysum[0:8]}"
+            req_headers[redaction_header] = redacted
     details = {
         "request_headers": str(req_headers),
         "response_size": len(response_data),
@@ -190,7 +197,7 @@ async def root(
             "Client-Info": f"{request.client.host}:{request.client.port}",
             "Content-Begins": response_utf_8[0:12],
             "Content-Ends": response_utf_8[-12:],
-            "Input-Length": str(files.size),
+            "Input-Length": str(files.size) if files is not None else "",
         },
     )
 
