@@ -1,0 +1,11 @@
+{{- if .Values.mock_endpoints.enabled -}}
+{{- with .Values.mock_endpoints.config -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mockserver.fullname" $ }}-config
+data:
+  configuration.yaml: |
+    {{- . | toYaml | nindent 4 }}
+{{- end -}}
+{{- end }}

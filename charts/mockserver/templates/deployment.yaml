@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mockserver.fullname" . }}
+  labels:
+    {{- include "mockserver.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mockserver.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mockserver.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.s3preloader }}
+      {{- if .enabled}}
+      initContainers:
+        {{- range .configs }}
+        - name: s3preloader
+          image: "{{ $.Values.s3preloader.image.repository }}:{{ $.Values.s3preloader.image.tag }}"
+          imagePullPolicy: {{ $.Values.s3preloader.image.pullPolicy }}
+          volumeMounts:
+            - name: {{ .volumeName }}
+              mountPath: /mnt/preload
+          env:
+            - name: DOWNLOAD_DESTINATION_DIRECTORY
+              value: /mnt/preload
+            {{- with .env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ .secretName }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- if .Values.mock_endpoints.enabled }}
+            - name: NETTEST_CONFIG
+              value: /etc/mocks-config.yaml
+            {{- end }}
+          volumeMounts:
+            {{ range .Values.s3preloader.configs }}
+            - name: {{ .volumeName }}
+              mountPath: {{ .mountPoint }}
+            {{- end }}
+            {{- if .Values.mock_endpoints.enabled }}
+            - name: mocks-config
+              mountPath: /etc/mocks-config.yaml
+              subPath: configuration.yaml
+            {{- end -}}
+            {{- with .Values.volumeMounts -}}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- range .Values.s3preloader.configs }}
+        - name: {{ .volumeName }}
+          emptyDir: {}
+        {{- end }}
+        {{- with .Values.volumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.mock_endpoints.enabled }}
+        - name: mocks-config
+          configMap:
+            name: {{ include "mockserver.fullname" $ }}-config
+        {{- end -}}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
