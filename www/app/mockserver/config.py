@@ -23,6 +23,7 @@ class MockEndpointConfig(BaseModel):
     latency_std_deviation: float = Field(
         description="Standard deviation in seconds", default=0.0
     )
+    media_type: str = Field(description="MIME type for Content Type header in response.", default=None)
 
 
 class NettestConfig(BaseModel):

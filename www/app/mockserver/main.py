@@ -73,8 +73,9 @@ for file_cfg in config.mock_server_configs:
             use_cache=False,
         )
     ):
-        print(f"called with {file_path}")
-        return FileResponse(file_path)
+        return FileResponse(file_path,
+                            filename=os.path.basename(file_path),
+                            media_type=file_cfg.media_type)
 
     # Now we mount that "endpoint" to the specified path with the specified methods
     for path in file_cfg.mount_paths:
@@ -82,7 +83,9 @@ for file_cfg in config.mock_server_configs:
             path=path,
             endpoint=respond_with_file,
             methods=file_cfg.methods,
+            response_class=FileResponse,
         )
+        logger.info(f"Added endpoint {path} serving from {file_cfg.source_files_directory}")
 
 
 class TimeUnit(str, Enum):
