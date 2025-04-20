@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 
 FROM python:3.13-alpine
-
+USER nobody
 # Copy the environment, but not the source code
 COPY --from=builder --chown=app:app /code/.venv /code/.venv
 ENV PATH="/code/.venv/bin:${PATH}"
