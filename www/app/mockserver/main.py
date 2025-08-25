@@ -28,7 +28,12 @@ import random
 from hashlib import sha256
 import yaml
 from mockserver.config import NettestConfig
-from mockserver.wrappers import call_after_delay, fail_sometimes, random_file_provider
+from mockserver.wrappers import (
+    call_after_delay,
+    fail_sometimes,
+    random_file_provider,
+    set_global_seed,
+)
 
 logging.basicConfig(
     level=LOG_LEVELS[os.environ.get("LOG_LEVEL", "info")],
@@ -60,32 +65,45 @@ else:
     config = NettestConfig()
 
 
+# Set global seed if configured
+if config.seed is not None:
+    set_global_seed(config.seed)
+    logger.info(f"Global seed set to: {config.seed}")
+
+
 # If configured, let's setup some mock endpoints to return files:
-for file_cfg in config.mock_server_configs:
-    # First, we create the "endpoint" function with some helpful wrappers
-    @fail_sometimes(probability=file_cfg.error_probability)
+def create_file_endpoint(cfg):
+    @fail_sometimes(probability=cfg.error_probability)
     @call_after_delay(
-        median=file_cfg.latency_median, std_dev=file_cfg.latency_std_deviation
+        mean=cfg.normal_latency_mean, std_dev=cfg.normal_latency_std_deviation
     )
     async def respond_with_file(
         file_path: str = Depends(
-            dependency=random_file_provider(directory=file_cfg.source_files_directory),
+            dependency=random_file_provider(directory=cfg.source_files_directory),
             use_cache=False,
         )
     ):
         return FileResponse(file_path,
                             filename=os.path.basename(file_path),
-                            media_type=file_cfg.media_type)
+                            media_type=cfg.media_type)
+    return respond_with_file
 
-    # Now we mount that "endpoint" to the specified path with the specified methods
-    for path in file_cfg.mount_paths:
-        app.add_api_route(
-            path=path,
-            endpoint=respond_with_file,
-            methods=file_cfg.methods,
-            response_class=FileResponse,
-        )
-        logger.info(f"Added endpoint {path} serving from {file_cfg.source_files_directory}")
+
+for i, file_cfg in enumerate(config.mock_server_configs):
+    try:
+        endpoint_func = create_file_endpoint(file_cfg)
+
+        # Now we mount that "endpoint" to the specified path with the specified methods
+        for path in file_cfg.mount_paths:
+            app.add_api_route(
+                path=path,
+                endpoint=endpoint_func,
+                methods=file_cfg.methods,
+                response_class=FileResponse,
+            )
+            logger.info(f"Added endpoint {path} serving from {file_cfg.source_files_directory}")
+    except Exception as e:
+        logger.error(f"Failed to create endpoint for config {i+1}: {e}")
 
 
 class TimeUnit(str, Enum):
@@ -111,11 +129,13 @@ _multipliers = {
     LengthUnit.mb: 1000**2,
 }
 
+
 empty_hash = f"sha256:{sha256(b"").hexdigest()}"
 
 
 LENGTH_PATTERN = r"^([0-9]{1,4})(b|kb|mb)$"
 DELAY_PATTERN = r"^([0-9]{1,4})(us|ms|s|m)$"
+
 
 @app.get("/ready")
 async def ready():

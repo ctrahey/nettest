@@ -20,5 +20,5 @@ USER nobody
 # Copy the environment, but not the source code
 COPY --from=builder --chown=app:app /code/.venv /code/.venv
 ENV PATH="/code/.venv/bin:${PATH}"
-WORKDIR /code/.venv/bin
+WORKDIR /code
 CMD ["uvicorn", "mockserver.main:app", "--host", "0.0.0.0", "--port", "80"]

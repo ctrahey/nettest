@@ -19,11 +19,20 @@ class MockEndpointConfig(BaseModel):
     error_probability: float = Field(
         description="Probability of 5xx error", default=0.0
     )
-    latency_median: float = Field(description="Median latency in seconds", default=0.0)
-    latency_std_deviation: float = Field(
-        description="Standard deviation in seconds", default=0.0
+    normal_latency_mean: float = Field(
+        description="Mean latency in seconds for Normal distribution",
+        default=0.0,
+        ge=0.0,
     )
-    media_type: str = Field(description="MIME type for Content Type header in response.", default=None)
+    normal_latency_std_deviation: float = Field(
+        description="Standard deviation in seconds for Normal distribution",
+        default=0.0,
+        ge=0.0,
+    )
+    media_type: str = Field(
+        description="MIME type for Content Type header in response.",
+        default=None
+    )
 
 
 class NettestConfig(BaseModel):
@@ -33,3 +42,5 @@ class NettestConfig(BaseModel):
     )
 
     mock_server_configs: List[MockEndpointConfig] = Field(default_factory=list)
+
+    seed: int = Field(description="Seed for random number generator", default=None)

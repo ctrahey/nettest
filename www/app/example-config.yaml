@@ -1,12 +1,33 @@
 redact_headers:
   - unstructured-api-key
+seed: 42
 mock_server_configs:
   - methods:
       - GET
       - POST
     mount_paths:
-      - "/general/v0/general"
+      - "/v1/example"
     source_files_directory: "example-outputs"
-    latency_median: 2
-    latency_std_deviation: 0.5
+    normal_latency_mean: 2
+    normal_latency_std_deviation: 0.5
     error_probability: 0.01
+  
+  - methods:
+      - GET
+    mount_paths:
+      - "/v1/vlm-partition"
+    source_files_directory: "vlm-outputs"
+    normal_latency_mean: 0.5
+    normal_latency_std_deviation: 0.1
+    error_probability: 0.02
+    media_type: "application/json"
+ 
+  - methods:
+      - GET
+    mount_paths:
+      - "/v1/partition"
+    source_files_directory: "partition-outputs"
+    normal_latency_mean: 1.0
+    normal_latency_std_deviation: 0.3
+    error_probability: 0.01
+    media_type: "application/json"
