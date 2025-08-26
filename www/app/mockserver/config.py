@@ -19,13 +19,13 @@ class MockEndpointConfig(BaseModel):
     error_probability: float = Field(
         description="Probability of 5xx error", default=0.0
     )
-    normal_latency_mean: float = Field(
-        description="Mean latency in seconds for Normal distribution",
+    lognormal_latency_mean: float = Field(
+        description="Mean latency in seconds for latency distribution",
         default=0.0,
         ge=0.0,
     )
-    normal_latency_std_deviation: float = Field(
-        description="Standard deviation in seconds for Normal distribution",
+    lognormal_latency_std_deviation: float = Field(
+        description="Standard deviation in seconds for latency distribution",
         default=0.0,
         ge=0.0,
     )

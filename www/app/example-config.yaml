@@ -8,8 +8,8 @@ mock_server_configs:
     mount_paths:
       - "/v1/example"
     source_files_directory: "example-outputs"
-    normal_latency_mean: 2
-    normal_latency_std_deviation: 0.5
+    lognormal_latency_mean: 2
+    lognormal_latency_std_deviation: 0.5
     error_probability: 0.01
   
   - methods:
@@ -17,8 +17,8 @@ mock_server_configs:
     mount_paths:
       - "/v1/vlm-partition"
     source_files_directory: "vlm-outputs"
-    normal_latency_mean: 0.5
-    normal_latency_std_deviation: 0.1
+    lognormal_latency_mean: 0.5
+    lognormal_latency_std_deviation: 0.1
     error_probability: 0.02
     media_type: "application/json"
  
@@ -27,7 +27,7 @@ mock_server_configs:
     mount_paths:
       - "/v1/partition"
     source_files_directory: "partition-outputs"
-    normal_latency_mean: 1.0
-    normal_latency_std_deviation: 0.3
+    lognormal_latency_mean: 0.2
+    lognormal_latency_std_deviation: 0.25
     error_probability: 0.01
     media_type: "application/json"

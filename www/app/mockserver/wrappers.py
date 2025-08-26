@@ -4,6 +4,7 @@ import os
 from typing import Callable
 from statistics import NormalDist
 import random
+import math
 from fastapi import HTTPException
 
 # Global seed management
@@ -19,13 +20,21 @@ def set_global_seed(seed: int):
 
 
 def call_after_delay(mean: float, std_dev: float):
-    d = NormalDist(mu=mean, sigma=std_dev)
-    samples = d.samples(n=1000)
+    # Convert mean and std_dev to lognormal parameters
+    # For lognormal: mu = ln(mean^2 / sqrt(mean^2 + std_dev^2))
+    #               sigma = sqrt(ln(1 + (std_dev/mean)^2))
+    if mean <= 0 or std_dev <= 0:
+        raise ValueError("Mean and standard deviation must be positive for lognormal distribution")
+    
+    mu = math.log(mean**2 / math.sqrt(mean**2 + std_dev**2))
+    sigma = math.sqrt(math.log(1 + (std_dev/mean)**2))
 
     def decorator(f: Callable):
         @functools.wraps(f)
         async def wrapper(*args, **kwargs):
-            await asyncio.sleep(random.choice(samples))
+            # Generate fresh sample each time for true randomness
+            normal_sample = NormalDist(mu=mu, sigma=sigma).samples(n=1)[0]
+            await asyncio.sleep(math.exp(normal_sample))
             return await f(*args, **kwargs)
 
         return wrapper

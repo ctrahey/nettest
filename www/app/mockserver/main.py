@@ -75,7 +75,7 @@ if config.seed is not None:
 def create_file_endpoint(cfg):
     @fail_sometimes(probability=cfg.error_probability)
     @call_after_delay(
-        mean=cfg.normal_latency_mean, std_dev=cfg.normal_latency_std_deviation
+        mean=cfg.lognormal_latency_mean, std_dev=cfg.lognormal_latency_std_deviation
     )
     async def respond_with_file(
         file_path: str = Depends(

@@ -46,7 +46,7 @@ The load testing component provides a sophisticated mock server designed to simu
 
 **Mock File Endpoints**
 - **Multiple File Types**: Serve PDFs, images, JSON, or any file type
-- **Realistic Latency**: Configure latency according to distribution
+- **Realistic Latency**: Configure latency according to lognormal distribution
 - **Error Simulation**: Set probability-based failure rates (5xx errors)
 - **Random File Selection**: Randomly serve files from configured directories
 
