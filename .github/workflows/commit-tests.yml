@@ -76,7 +76,7 @@ jobs:
     - name: Run black check
       run: |
         cd www/app
-        black --check mockserver/ tests/
+        black --check --line-length=100 mockserver/ tests/
 
     - name: Run isort check
       run: |
