@@ -6,9 +6,53 @@ on:
   pull_request:
     branches-ignore: []
 
+
 jobs:
   test:
-    name: Run Unit Tests
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('www/app/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          
+    - name: Install dependencies
+      run: |
+        cd www/app
+        pip install --upgrade pip
+        pip install -e ".[test]"
+        
+    - name: Run tests
+      run: |
+        cd www/app
+        python -m pytest tests/ -v --cov=mockserver --cov-report=xml
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./www/app/coverage.xml
+        flags: mockserver
+        name: mockserver-coverage
+      continue-on-error: true
+
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
     
     steps:
@@ -18,25 +62,56 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.12"
+        python-version: "3.11"
+        
+    - name: Install linting tools
+      run: |
+        pip install flake8 black isort mypy
+        
+    - name: Run flake8
+      run: |
+        cd www/app
+        flake8 mockserver/ tests/ --max-line-length=88 --extend-ignore=E203,W503
+        
+    - name: Run black check
+      run: |
+        cd www/app
+        black --check mockserver/ tests/
+        
+    - name: Run isort check
+      run: |
+        cd www/app
+        isort --check-only mockserver/ tests/
+        
+    - name: Run mypy
+      run: |
+        cd www/app
+        mypy mockserver/ --ignore-missing-imports
+
+  quick-test:
+    name: Quick Test (All Branches)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
         
     - name: Install dependencies
       run: |
         cd www/app
-        pip install --upgrade pip
         pip install -e ".[test]"
         
-    - name: Run all tests
+    - name: Run tests quickly
       run: |
         cd www/app
         python -m pytest tests/ -v --tb=short
         
-    - name: Check code syntax
+    - name: Check syntax
       run: |
         cd www/app
-        python -m py_compile mockserver/**/*.py
-        
-    - name: Run with coverage
-      run: |
-        cd www/app
-        python -m pytest tests/ --cov=mockserver --cov-report=term-missing
+        python -m py_compile mockserver/*.py
