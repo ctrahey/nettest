@@ -39,11 +39,9 @@ logging.basicConfig(
     level=LOG_LEVELS[os.environ.get("LOG_LEVEL", "info")],
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
-logging.Formatter.formatTime = (
-    lambda self, record, datefmt=None: datetime.fromtimestamp(
-        record.created, timezone.utc
-    ).isoformat(sep="T", timespec="microseconds")
-)
+logging.Formatter.formatTime = lambda self, record, datefmt=None: datetime.fromtimestamp(
+    record.created, timezone.utc
+).isoformat(sep="T", timespec="microseconds")
 
 logger = logging.getLogger(__name__)
 
@@ -74,18 +72,17 @@ if config.seed is not None:
 # If configured, let's setup some mock endpoints to return files:
 def create_file_endpoint(cfg):
     @fail_sometimes(probability=cfg.error_probability)
-    @call_after_delay(
-        mean=cfg.lognormal_latency_mean, std_dev=cfg.lognormal_latency_std_deviation
-    )
+    @call_after_delay(mean=cfg.lognormal_latency_mean, std_dev=cfg.lognormal_latency_std_deviation)
     async def respond_with_file(
         file_path: str = Depends(
             dependency=random_file_provider(directory=cfg.source_files_directory),
             use_cache=False,
         )
     ):
-        return FileResponse(file_path,
-                            filename=os.path.basename(file_path),
-                            media_type=cfg.media_type)
+        return FileResponse(
+            file_path, filename=os.path.basename(file_path), media_type=cfg.media_type
+        )
+
     return respond_with_file
 
 
@@ -177,9 +174,7 @@ async def root(
         )
     _seed = seed if seed is not None else random.randint(0, 2**32 - 1)
     random.seed(_seed)
-    data = random.randbytes(
-        int(size * 0.75)
-    )  # 0.75 because base64 encodes 6 bits of data into 8
+    data = random.randbytes(int(size * 0.75))  # 0.75 because base64 encodes 6 bits of data into 8
     response_data = base64.b64encode(data)
     sum = sha256(response_data).hexdigest().encode("utf-8")
     response_utf_8 = response_data.decode("utf-8")
@@ -247,9 +242,7 @@ if __name__ == "__main__":
     levels = LOG_LEVELS.keys()
 
     parser = ArgumentParser()
-    parser.add_argument(
-        "-p", "--port", default=8080, type=int, help="port to listen on"
-    )
+    parser.add_argument("-p", "--port", default=8080, type=int, help="port to listen on")
     parser.add_argument(
         "-r", "--reload", default=False, action="store_true", help="enable hot reload"
     )

@@ -16,9 +16,7 @@ class MockEndpointConfig(BaseModel):
     source_files_directory: str = Field(
         description="Directory where response files are mounted", default=None
     )
-    error_probability: float = Field(
-        description="Probability of 5xx error", default=0.0
-    )
+    error_probability: float = Field(description="Probability of 5xx error", default=0.0)
     lognormal_latency_mean: float = Field(
         description="Mean latency in seconds for latency distribution",
         default=0.0,
@@ -30,8 +28,7 @@ class MockEndpointConfig(BaseModel):
         ge=0.0,
     )
     media_type: str = Field(
-        description="MIME type for Content Type header in response.",
-        default=None
+        description="MIME type for Content Type header in response.", default=None
     )
 
 

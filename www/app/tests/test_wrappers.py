@@ -15,13 +15,14 @@ class TestCallAfterDelay:
     @pytest.mark.asyncio
     async def test_call_after_delay_decorator(self):
         """Test that the decorator adds delay and preserves function behavior"""
+
         # Create a simple async function to test
         @call_after_delay(mean=0.01, std_dev=0.005)
         async def test_function():
             return "test_result"
 
         # Mock asyncio.sleep to avoid actual delays
-        with patch('asyncio.sleep') as mock_sleep:
+        with patch("asyncio.sleep") as mock_sleep:
             result = await test_function()
 
             # Verify sleep was called
@@ -32,11 +33,12 @@ class TestCallAfterDelay:
     @pytest.mark.asyncio
     async def test_call_after_delay_with_arguments(self):
         """Test that the decorator works with functions that take arguments"""
+
         @call_after_delay(mean=0.01, std_dev=0.005)
         async def test_function(arg1, arg2, kwarg1=None):
             return f"{arg1}_{arg2}_{kwarg1}"
 
-        with patch('asyncio.sleep'):
+        with patch("asyncio.sleep"):
             result = await test_function("a", "b", kwarg1="c")
             assert result == "a_b_c"
 
@@ -47,6 +49,7 @@ class TestFailSometimes:
     @pytest.mark.asyncio
     async def test_fail_sometimes_never_fails_with_zero_probability(self):
         """Test that function never fails when probability is 0.0"""
+
         @fail_sometimes(probability=0.0)
         async def test_function():
             return "success"
@@ -59,6 +62,7 @@ class TestFailSometimes:
     @pytest.mark.asyncio
     async def test_fail_sometimes_always_fails_with_probability_one(self):
         """Test that function always fails when probability is 1.0"""
+
         @fail_sometimes(probability=1.0)
         async def test_function():
             return "success"
@@ -74,6 +78,7 @@ class TestFailSometimes:
     @pytest.mark.asyncio
     async def test_fail_sometimes_with_arguments(self):
         """Test that the decorator works with functions that take arguments"""
+
         @fail_sometimes(probability=0.0)  # Never fail for this test
         async def test_function(arg1, arg2, kwarg1=None):
             return f"{arg1}_{arg2}_{kwarg1}"
@@ -90,7 +95,7 @@ class TestFailSometimes:
         async def test_function():
             return "success"
 
-        with patch('random.random', return_value=0.1):  # Force failure
+        with patch("random.random", return_value=0.1):  # Force failure
             with pytest.raises(HTTPException) as exc_info:
                 await test_function()
 
@@ -110,7 +115,7 @@ class TestRandomFileProvider:
         # Create test files
         for filename in self.test_files:
             filepath = os.path.join(self.temp_dir, filename)
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 f.write(f"content for {filename}")
 
     def teardown_method(self):
@@ -162,7 +167,7 @@ class TestRandomFileProvider:
 
         # Create a file in the subdirectory
         subdir_file = os.path.join(subdir, "subfile.txt")
-        with open(subdir_file, 'w') as f:
+        with open(subdir_file, "w") as f:
             f.write("subdirectory content")
 
         provider = random_file_provider(self.temp_dir)
@@ -173,7 +178,7 @@ class TestRandomFileProvider:
             assert os.path.dirname(filepath) == self.temp_dir
             assert os.path.basename(filepath) in self.test_files
 
-    @patch('random.choice')
+    @patch("random.choice")
     def test_random_file_provider_uses_random_choice(self, mock_choice):
         """Test that the provider uses random.choice to select files"""
         mock_choice.return_value = "file1.txt"
@@ -203,6 +208,7 @@ class TestRandomFileProvider:
         """Test that the provider works correctly when no seed is set"""
         # Reset the global seed flag for this test
         import mockserver.wrappers
+
         original_global_seed = mockserver.wrappers._global_seed
         mockserver.wrappers._global_seed = None
 
@@ -218,9 +224,9 @@ class TestRandomFileProvider:
             # With current implementation: seed is set once, then random state advances
             # So results should be different (not identical) as random state progresses
             # But all results should be valid files
-            assert len(set(results)) > 1, (
-                f"Results should differ as random state advances: {results}"
-            )
+            assert (
+                len(set(results)) > 1
+            ), f"Results should differ as random state advances: {results}"
             for result in results:
                 assert os.path.exists(result)
                 assert os.path.basename(result) in self.test_files
@@ -229,11 +235,12 @@ class TestRandomFileProvider:
             # Restore the original flag state
             mockserver.wrappers._global_seed = original_global_seed
 
-    @patch('os.walk')
+    @patch("os.walk")
     def test_random_file_provider_with_sorted_files(self, mock_walk):
         """Test behavior when file list is sorted (mocked os.walk)"""
         # Reset the global seed flag for this test
         import mockserver.wrappers
+
         original_global_seed = mockserver.wrappers._global_seed
         mockserver.wrappers._global_seed = None
 
@@ -267,25 +274,27 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_multiple_decorators_work_together(self):
         """Test that multiple decorators can be applied to the same function"""
+
         @call_after_delay(mean=0.01, std_dev=0.005)
         @fail_sometimes(probability=0.0)  # Never fail for this test
         async def test_function():
             return "integration_test_result"
 
-        with patch('asyncio.sleep'):  # Mock sleep to avoid delays
+        with patch("asyncio.sleep"):  # Mock sleep to avoid delays
             result = await test_function()
             assert result == "integration_test_result"
 
     @pytest.mark.asyncio
     async def test_decorators_preserve_async_behavior(self):
         """Test that decorated functions maintain their async behavior"""
+
         @call_after_delay(mean=0.01, std_dev=0.005)
         @fail_sometimes(probability=0.0)
         async def test_function():
             await asyncio.sleep(0.001)  # Small async operation
             return "async_result"
 
-        with patch('asyncio.sleep') as mock_sleep:
+        with patch("asyncio.sleep") as mock_sleep:
             result = await test_function()
             assert result == "async_result"
             # Should have called sleep twice: once from call_after_delay, once from the function

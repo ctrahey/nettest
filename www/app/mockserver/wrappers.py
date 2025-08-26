@@ -27,7 +27,7 @@ def call_after_delay(mean: float, std_dev: float):
         raise ValueError("Mean and standard deviation must be positive for lognormal distribution")
 
     mu = math.log(mean**2 / math.sqrt(mean**2 + std_dev**2))
-    sigma = math.sqrt(math.log(1 + (std_dev/mean)**2))
+    sigma = math.sqrt(math.log(1 + (std_dev / mean) ** 2))
 
     def decorator(f: Callable):
         @functools.wraps(f)
@@ -71,6 +71,7 @@ def random_file_provider(directory: str):
     Raises:
             FileNotFoundError: If directory doesn't exist or has no files.
     """
+
     def provider():
 
         if not os.path.exists(directory):
