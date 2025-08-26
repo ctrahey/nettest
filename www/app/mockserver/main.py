@@ -1,39 +1,28 @@
 #! /usr/bin/env python
+import asyncio
 import base64
 import json
+import logging
 import os
+import random
 import re
+import time
 from argparse import ArgumentParser
 from datetime import datetime, timezone
-import time
+from enum import Enum
+from hashlib import sha256
 from typing import Annotated, Optional
 
-from fastapi import (
-    FastAPI,
-    status,
-    UploadFile,
-    Path,
-    Response,
-    Request,
-    HTTPException,
-    Depends,
-)
 import uvicorn
+import yaml
+from fastapi import (Depends, FastAPI, HTTPException, Path, Request, Response,
+                     UploadFile, status)
 from starlette.responses import FileResponse
 from uvicorn.config import LOG_LEVELS
-import asyncio
-import logging
-from enum import Enum
-import random
-from hashlib import sha256
-import yaml
+
 from mockserver.config import NettestConfig
-from mockserver.wrappers import (
-    call_after_delay,
-    fail_sometimes,
-    random_file_provider,
-    set_global_seed,
-)
+from mockserver.wrappers import (call_after_delay, fail_sometimes,
+                                 random_file_provider, set_global_seed)
 
 logging.basicConfig(
     level=LOG_LEVELS[os.environ.get("LOG_LEVEL", "info")],

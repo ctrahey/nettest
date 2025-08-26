@@ -1,10 +1,11 @@
 import asyncio
 import functools
-import os
-from typing import Callable
-from statistics import NormalDist
-import random
 import math
+import os
+import random
+from statistics import NormalDist
+from typing import Callable
+
 from fastapi import HTTPException
 
 # Global seed management
