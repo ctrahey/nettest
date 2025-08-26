@@ -7,8 +7,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import HTTPException
 
-from mockserver.wrappers import (call_after_delay, fail_sometimes,
-                                 random_file_provider)
+from mockserver.wrappers import call_after_delay, fail_sometimes, random_file_provider
 
 
 class TestCallAfterDelay:
