@@ -25,7 +25,7 @@ def call_after_delay(mean: float, std_dev: float):
     #               sigma = sqrt(ln(1 + (std_dev/mean)^2))
     if mean <= 0 or std_dev <= 0:
         raise ValueError("Mean and standard deviation must be positive for lognormal distribution")
-    
+
     mu = math.log(mean**2 / math.sqrt(mean**2 + std_dev**2))
     sigma = math.sqrt(math.log(1 + (std_dev/mean)**2))
 
@@ -62,7 +62,7 @@ def random_file_provider(directory: str):
     """
     Creates a dependency provider that returns random files from a specified directory.
     Uses os.walk for memory-efficient file discovery, avoiding loading entire file list into memory.
-    
+
     Args:
         directory (str): Path to the directory containing files to serve.
     Returns:
@@ -72,7 +72,7 @@ def random_file_provider(directory: str):
             FileNotFoundError: If directory doesn't exist or has no files.
     """
     def provider():
-     
+
         if not os.path.exists(directory):
             raise FileNotFoundError(f"Directory {directory} does not exist")
 
@@ -86,10 +86,10 @@ def random_file_provider(directory: str):
                     if os.path.isfile(filepath):
                         files.append(filename)
                 break  # Only process the root directory
-        
+
         if not files:
             raise FileNotFoundError(f"Directory {directory} has no files")
-        
+
         return os.path.join(directory, random.choice(files))
 
     return provider

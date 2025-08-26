@@ -130,7 +130,7 @@ _multipliers = {
 }
 
 
-empty_hash = f"sha256:{sha256(b"").hexdigest()}"
+empty_hash = f"sha256:{sha256(b'').hexdigest()}"
 
 
 LENGTH_PATTERN = r"^([0-9]{1,4})(b|kb|mb)$"
