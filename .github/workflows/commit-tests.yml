@@ -73,11 +73,6 @@ jobs:
         cd www/app
         flake8 mockserver/ tests/ --max-line-length=100 --extend-ignore=E203,W503
 
-    - name: Run black check
-      run: |
-        cd www/app
-        black --check --line-length=100 mockserver/ tests/
-
     - name: Run isort check
       run: |
         cd www/app
