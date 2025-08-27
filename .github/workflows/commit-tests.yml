@@ -76,7 +76,7 @@ jobs:
     - name: Run isort check
       run: |
         cd www/app
-        isort --check-only --profile=black mockserver/ tests/
+        isort --check-only mockserver/ tests/
 
     - name: Run mypy
       run: |
