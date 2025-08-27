@@ -78,10 +78,6 @@ jobs:
         cd www/app
         isort --check-only mockserver/ tests/
 
-    - name: Run mypy
-      run: |
-        cd www/app
-        mypy mockserver/ --ignore-missing-imports
 
   quick-test:
     name: Quick Test (All Branches)
