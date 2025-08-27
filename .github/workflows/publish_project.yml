@@ -1,0 +1,54 @@
+name: Publish Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      work-dir:
+        description: "working directory for project"
+        required: true
+        type: string
+    secrets:
+      PRIVATE_PYPI_INDEX_URL:
+        description: Private PyPI index url.
+        required: true
+
+jobs:
+  setup-environment:
+    uses: Unstructured-IO/github-workflows/.github/workflows/setup-environment.yml@v3.3.13
+    with:
+      use-uv: true
+      work-dir: ${{ inputs.work-dir }}
+      runs-on: ubuntu-latest
+    secrets: inherit
+
+  build:
+    needs: [setup-environment]
+    uses: Unstructured-IO/github-workflows/.github/workflows/build.yml@v3.3.13
+    with:
+      use-uv: true
+      build-targets: '["build-container"]'
+      work-dir: ${{ inputs.work-dir }}
+      release-candidate: true
+      runs-on: ubuntu-latest
+    secrets: inherit
+
+  publish:
+    needs: [build]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    uses: Unstructured-IO/github-workflows/.github/workflows/publish.yml@v3.3.13
+    with:
+      publish-targets: "publish-container"
+      container-targets: 'uticplatform'
+      container-image-name: ${{ needs.build.outputs.container-image-name }}
+      container-file-name: ${{ needs.build.outputs.container-file-name }}
+    secrets: inherit
+
+  promote-release:
+    name: Promote to Preview Channel
+    needs: [publish, build]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    uses: Unstructured-IO/github-workflows/.github/workflows/promote-release.yml@v3.3.13
+    with:
+      channel: preview
+      container-file-name: ${{ needs.build.outputs.container-file-name }}
+    secrets: inherit

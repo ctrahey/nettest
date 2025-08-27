@@ -1,0 +1,39 @@
+name: Publish Docker Images
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      s3_preloader: ${{ steps.filter.outputs.s3_preloader }}
+      mock_service: ${{ steps.filter.outputs.mock_service }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          s3_preloader:
+            - 's3-preloader/app/**'
+          mock_service:
+            - 'www/app/**'
+
+  s3_preloader:
+    needs: [detect_changes]
+    if: ${{ needs.detect_changes.outputs.s3_preloader == 'true' }}
+    uses: ./.github/workflows/publish_project.yml
+    with:
+      work-dir: "s3-preloader/app"
+    secrets: inherit
+
+  mock_service:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.mock_service == 'true' }}
+    uses: ./.github/workflows/publish_project.yml
+    with:
+      work-dir: "www/app"
+    secrets: inherit
