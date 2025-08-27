@@ -15,14 +15,17 @@ from typing import Annotated, Optional
 
 import uvicorn
 import yaml
-from fastapi import (Depends, FastAPI, HTTPException, Path, Request, Response,
-                     UploadFile, status)
+from fastapi import Depends, FastAPI, HTTPException, Path, Request, Response, UploadFile, status
 from starlette.responses import FileResponse
 from uvicorn.config import LOG_LEVELS
 
 from mockserver.config import NettestConfig
-from mockserver.wrappers import (call_after_delay, fail_sometimes,
-                                 random_file_provider, set_global_seed)
+from mockserver.wrappers import (
+    call_after_delay,
+    fail_sometimes,
+    random_file_provider,
+    set_global_seed,
+)
 
 logging.basicConfig(
     level=LOG_LEVELS[os.environ.get("LOG_LEVEL", "info")],
